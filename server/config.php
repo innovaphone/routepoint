@@ -18,9 +18,8 @@ $cmds = array(
     "play TONE" => "
             <pbx-prompt url='TONE' sec='1'/>
             ",
-    "->321" => "
-            <pbx-fwd e164='321' sec='1' out-cause='cause' barge-in='true'/>
-            ",
+    "->call dialed number" => "call",
+    "->call dialed number (supervised)" => "call_supervised",
     "disconnect caller (busy)" => "
             <pbx-disc cause='17'/>
             ",
@@ -35,7 +34,7 @@ $cmds = array(
 /**
  * html refresh rate
  */
-$refreshrate = 2;
+$refreshrate = 3;
 
 /**
  * stop refresh when there are no calls?

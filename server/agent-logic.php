@@ -58,7 +58,7 @@ function answer($code, $wait = 0) {
 }
 
 /**
- * enter ne call into db
+ * enter new call into db
  * @global RoutepointAccess $rp
  * @param SQLStringValue $confid
  */
@@ -99,10 +99,14 @@ function dtmf($call, $dtmf, SQLStringValue $confid) {
     // save dtmf (just for debug, usually we'd have logic here)
     global $rp;
     $sqldtmf = new SQLStringValue($dtmf, null, $rp);
-    $sql = "UPDATE routepoint.call SET dtmf = $sqldtmf->sql WHERE confid = $confid->sql";
+    if ($dtmf != '#') {
+        $sql = "UPDATE routepoint.call SET cumulated_dtmf = concat(cumulated_dtmf, $sqldtmf->sql) WHERE confid = $confid->sql";
+    } else {
+        $sql = "UPDATE routepoint.call SET cumulated_dtmf = '' WHERE confid = $confid->sql";
+    }
     $rp->query($sql);
     // have script retry 
-    print answer("<!-- dtmf $dtmf seen on call $confid->php -->");
+    print answer("<!-- dtmf $dtmf seen on call $confid->php ($sql))-->");
 }
 
 /**
@@ -180,7 +184,7 @@ if (count($calls) == 0) {
 
     switch (getparam("event", "main-loop")) {
         case "call-end" :
-            cleanup($call, $sqlconfid);  
+            cleanup($call, $sqlconfid);
             exit;
         case "dtmf" :
             dtmf($call, getparam("dtmf"), $sqlconfid);

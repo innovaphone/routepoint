@@ -41,6 +41,7 @@ CREATE TABLE `call` (
   `cause` int(11) DEFAULT NULL COMMENT 'last cause code received from attempted transfer',
   `state` varchar(45) DEFAULT NULL COMMENT '''internal state''',
   `dtmf` tinytext COMMENT 'last dtmf seen from call',
+  `cumulated_dtmf` varchar(45) DEFAULT '' COMMENT 'cumulated dtmf from call',
   `event` varchar(45) DEFAULT NULL COMMENT 'last event seen from call',
   `h323` varchar(45) DEFAULT NULL COMMENT 'calling h323-id',
   `calling_name` varchar(45) DEFAULT NULL COMMENT 'calling name',

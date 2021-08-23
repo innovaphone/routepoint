@@ -156,8 +156,10 @@ WHERE true
     return $query;
 }
 
+/**
+ * redirect back to index page
+ */
 function redirect() {
-    // redirect back to index page
     $opts = $_REQUEST;
     unset($opts["setcmd"]);
     foreach ($opts as $opt => $val)
@@ -165,12 +167,37 @@ function redirect() {
     header("Location: ?" . implode("&", $opts));
 }
 
+/**
+ * call dmtf-dialled target
+ * @param stdClass $call
+ * @return string
+ */
+function call(stdClass $call) {
+    return("<pbx-fwd e164='{$call->cumulated_dtmf}' sec='15' out-cause='cause' barge-in='true'/>");
+}
+
+/**
+ * call dmtf-dialled target but in supervised mode
+ * @param stdClass $call
+ * @return string
+ */
+function call_supervised(stdClass $call) {
+    return("<pbx-fwd e164='{$call->cumulated_dtmf}' sec='15' out-cause='cause' barge-in='true' params='conn_continue'/>");
+}
+
 $rp = new RoutepointAccess(DBHost, DBUser, DBPW, DBName);
 
 if (($cmd = getparam("setcmd")) !== null && (($confid = getparam("objguid")) !== null)) {
     // write cmd to db
-    $cmd = new SQLStringValue($cmd, null, $rp);
+    $_REQUEST['confid'] = $confid;
+    if (function_exists($cmd)) {
+        // dynamic cmd, get call data
+        $r = $rp->queryForObjects(makeQuery($rp));
+        if (count($r) != 1) die(count($r) . " call records for {$confid} -- should be 1!");
+        $cmd = $cmd($r[0]);
+    }
     $confid = new SQLStringValue($confid, null, $rp);
+    $cmd = new SQLStringValue($cmd, null, $rp);
     $sql = "UPDATE routepoint.call SET cmd = $cmd->sql, done = 0 WHERE confid = $confid->sql";
     $rp->query($sql);
     redirect();
