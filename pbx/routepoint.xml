@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<voicemail xmlns="http://www.innovaphone.com/xsd/voicemail6.xsd">
+
+  <function define="Main">
+    <assign out="$_pbxfwd" value="true" />
+    <assign out="wait" value="0" />
+
+    <!-- Following values are usually provided via query string in the VoiceMail Object URL-->
+    <!-- <assign out="server" value="192.168.1.100:8080/routepoint/server/agent-logic.php" /> -->
+    <!-- <assign out="fallback-e164" value="123" /> -->
+    <!-- <assign out="fallback-name" value="wq" /> -->
+
+    <!-- call end handling -->
+    <event type="call-end">
+
+      <assign out="event" value="call-end" />
+
+      <call name="UpdateQueryString" />
+      <call name="Logic" />
+
+    </event>
+
+    <!-- DTMF handling -->
+    <event type="dtmf" block="false">
+
+      <assign out="event" value="dtmf" />
+
+      <call name="UpdateQueryString" />
+      <call name="Logic" />
+
+    </event>
+
+    <!-- CALL-INFO handling (overlap dialling before CONNECT)-->
+    <event type="call-info">
+
+      <assign out="event" value="call-info" />
+
+      <call name="UpdateQueryString" />
+      <call name="Logic" />
+
+    </event>
+
+    <assign out="stop" value="false"/>
+    <while notcond="$stop">
+      <!-- worker loop: do stuff -->
+      <dbg string="worker loop: do stuff"/>
+
+      <assign out="event" value="main-loop"/>
+
+      <call name="UpdateQueryString"/>
+      <call name="Logic" />
+
+      <if cond="$wait">
+        <wait sec="$wait"/>
+        <assign out="wait" value="0"/>
+      </if>
+
+    </while>
+
+    <pbx-disc/>
+
+  </function>
+
+  <!-- do GET request -->
+  <function define="Logic">
+
+    <assign out="ok" value="0"/>
+
+    <if cond="$server">
+      <lib-dec string="$server" out-string="$server" type="url"/>
+      <lib-strcat string="$server" string2="$query-string" out-string="$exec-url"/>
+    </if>
+    <else>
+      <store-get root="" name="agent-logic.php" out-url="$exec-url"/>
+    </else>
+
+    <exec url="$exec-url"/>
+
+    <if notcond="$ok">
+      <if cond="$fallback-name">
+        <pbx-xfer name="$fallback-name"/>
+      </if>
+      <else>
+        <if cond="$fallback-e164">
+          <pbx-xfer e164="$fallback-e164"/>
+        </if>
+      </else>
+    </if>
+
+  </function>
+
+  <function define="UpdateQueryString">
+
+    <assign out="query-string" value="" />
+
+    <pbx-getcallinfo out-cgpn="$cgpn" out-cdpn="$cdpn" out-leg2="$leg2" out-leg2-reason="$leg2-reason" out-leg2-count="$leg2-count" out-ctl-call="$ctl-call" out-h323="$h323" out-confid="$confid" out-calling-name="$calling-name"/>
+
+    <lib-enc string="$confid" out-string="$confid" type="url"/>
+    <lib-strcat string="$query-string" string2="?confid=" out-string="$query-string"/>
+    <lib-strcat string="$query-string" string2="$confid" out-string="$query-string"/>
+
+    <lib-enc string="$event" out-string="$event" type="url"/>
+    <lib-strcat string="$query-string" string2="&amp;event=" out-string="$query-string"/>
+    <lib-strcat string="$query-string" string2="$event" out-string="$query-string"/>
+
+    <switch var="$event">
+      <case equal="dtmf">
+        <pbx-getdtmfdigit out-dtmf="$dtmf" />
+  
+        <dbg string="DTMF: " string2="$dtmf"/>
+        
+        <lib-enc string="$dtmf" out-string="$dtmf" type="url"/>
+        <lib-strcat string="$query-string" string2="&amp;dtmf=" out-string="$query-string"/>
+        <lib-strcat string="$query-string" string2="$dtmf" out-string="$query-string"/>
+      </case>
+    </switch>
+
+    <lib-enc string="$cgpn" out-string="$cgpn" type="url"/>
+    <lib-strcat string="$query-string" string2="&amp;cgpn=" out-string="$query-string"/>
+    <lib-strcat string="$query-string" string2="$cgpn" out-string="$query-string"/>
+
+    <lib-enc string="$cdpn" out-string="$cdpn" type="url"/>
+    <lib-strcat string="$query-string" string2="&amp;cdpn=" out-string="$query-string"/>
+    <lib-strcat string="$query-string" string2="$cdpn" out-string="$query-string"/>
+
+    <lib-enc string="$leg2" out-string="$leg2" type="url"/>
+    <lib-strcat string="$query-string" string2="&amp;leg2=" out-string="$query-string"/>
+    <lib-strcat string="$query-string" string2="$leg2" out-string="$query-string"/>
+
+    <lib-enc string="$leg2-reason" out-string="$leg2-reason" type="url"/>
+    <lib-strcat string="$query-string" string2="&amp;leg2-reason=" out-string="$query-string"/>
+    <lib-strcat string="$query-string" string2="$leg2-reason" out-string="$query-string"/>
+
+    <lib-enc string="$leg2-count" out-string="$leg2-count" type="url"/>
+    <lib-strcat string="$query-string" string2="&amp;leg2-count=" out-string="$query-string"/>
+    <lib-strcat string="$query-string" string2="$leg2-count" out-string="$query-string"/>
+
+    <lib-enc string="$ctl-call" out-string="$ctl-call" type="url"/>
+    <lib-strcat string="$query-string" string2="&amp;ctl-call=" out-string="$query-string"/>
+    <lib-strcat string="$query-string" string2="$ctl-call" out-string="$query-string"/>
+
+    <lib-enc string="$h323" out-string="$h323" type="url"/>
+    <lib-strcat string="$query-string" string2="&amp;h323=" out-string="$query-string"/>
+    <lib-strcat string="$query-string" string2="$h323" out-string="$query-string"/>
+
+    <lib-enc string="$calling-name" out-string="$calling-name" type="url"/>
+    <lib-strcat string="$query-string" string2="&amp;calling-name=" out-string="$query-string"/>
+    <lib-strcat string="$query-string" string2="$calling-name" out-string="$query-string"/>
+
+    <lib-enc string="$cause" out-string="$cause" type="url"/>
+    <lib-strcat string="$query-string" string2="&amp;cause=" out-string="$query-string"/>
+    <lib-strcat string="$query-string" string2="$cause" out-string="$query-string"/>
+
+  </function>
+
+</voicemail>
+
+ 
