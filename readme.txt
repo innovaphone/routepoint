@@ -3,7 +3,8 @@ The system consists of a Voice Mail Object (VM) in a PBX and an XML script which
 In the central site, there is the call center server (CCS). The files are stored in the "server" tree.
 
 The VM is controlled by the pbx/routepoint.xml script.
-The CCS consists of server/index.php, server/agent-logic.php and server/config.php plus some utility classes in server/classes.
+The CCS consists of server/index.php, server/agent-logic.php and server/config.php plus some utility classes in server/classes. 
+The state-database "routepoint" can be created with the routepoint-creation.sql
 
 Any configuration for the server can be done in server/config.php.
 
