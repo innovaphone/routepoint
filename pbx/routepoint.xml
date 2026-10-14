@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<voicemail xmlns="http://www.innovaphone.com/xsd/voicemail6.xsd">
+<voicemail xmlns="https://www.innovaphone.com/xsd/voicemail6.xsd">
 
   <function define="Main">
     <assign out="$_pbxfwd" value="true" />
